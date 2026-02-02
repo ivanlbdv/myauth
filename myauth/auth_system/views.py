@@ -11,6 +11,7 @@ from .serializers import (AccessRuleSerializer, PermissionSerializer,
 
 class RegisterView(APIView):
     def post(self, request):
+        print("Received data:", request.data)
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
