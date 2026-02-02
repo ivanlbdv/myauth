@@ -15,7 +15,7 @@ class RegisterView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(
-                {"message": "Пользователь зарегистрирован"},
+                {'message': 'Пользователь зарегистрирован'},
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -30,18 +30,18 @@ class LoginView(APIView):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response(
-                {"error": "Пользователь не найден"},
+                {'error': 'Пользователь не найден'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
         if not user.check_password(password) or not user.is_active:
             return Response(
-                {"error": "Неверный пароль или аккаунт неактивен"},
+                {'error': 'Неверный пароль или аккаунт неактивен'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
         token = user.generate_jwt()
-        return Response({"token": token}, status=status.HTTP_200_OK)
+        return Response({'token': token}, status=status.HTTP_200_OK)
 
 
 class LogoutView(APIView):
@@ -49,7 +49,7 @@ class LogoutView(APIView):
 
     def post(self, request):
         return Response(
-            {"message": "Выход выполнен"},
+            {'message': 'Выход выполнен'},
             status=status.HTTP_200_OK
         )
 
@@ -84,12 +84,11 @@ class UserDeleteView(APIView):
         user.is_active = False
         user.save()
         return Response(
-            {"message": "Аккаунт деактивирован"},
+            {'message': 'Аккаунт деактивирован'},
             status=status.HTTP_204_NO_CONTENT
         )
 
 
-# Административные API для управления правами
 class RoleListCreateView(APIView):
     permission_classes = [
         IsAuthenticated,
@@ -122,7 +121,7 @@ class RoleDetailView(APIView):
             return Response(serializer.data)
         except Role.DoesNotExist:
             return Response(
-                {"error": "Роль не найдена"},
+                {'error': 'Роль не найдена'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -131,7 +130,7 @@ class RoleDetailView(APIView):
             role = Role.objects.get(id=role_id)
         except Role.DoesNotExist:
             return Response(
-                {"error": "Роль не найдена"},
+                {'error': 'Роль не найдена'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -146,12 +145,12 @@ class RoleDetailView(APIView):
             role = Role.objects.get(id=role_id)
             role.delete()
             return Response(
-                {"message": "Роль удалена"},
+                {'message': 'Роль удалена'},
                 status=status.HTTP_204_NO_CONTENT
             )
         except Role.DoesNotExist:
             return Response(
-                {"error": "Роль не найдена"},
+                {'error': 'Роль не найдена'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -195,7 +194,7 @@ class AccessRuleDetailView(APIView):
             return Response(serializer.data)
         except AccessRule.DoesNotExist:
             return Response(
-                {"error": "Правило не найдено"},
+                {'error': 'Правило не найдено'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -204,7 +203,7 @@ class AccessRuleDetailView(APIView):
             rule = AccessRule.objects.get(id=rule_id)
         except AccessRule.DoesNotExist:
             return Response(
-                {"error": "Правило не найдено"},
+                {'error': 'Правило не найдено'},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -223,11 +222,11 @@ class AccessRuleDetailView(APIView):
             rule = AccessRule.objects.get(id=rule_id)
             rule.delete()
             return Response(
-                {"message": "Правило удалено"},
+                {'message': 'Правило удалено'},
                 status=status.HTTP_204_NO_CONTENT
             )
         except AccessRule.DoesNotExist:
             return Response(
-                {"error": "Правило не найдено"},
+                {'error': 'Правило не найдено'},
                 status=status.HTTP_404_NOT_FOUND
             )

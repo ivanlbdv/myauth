@@ -12,8 +12,8 @@ class PostsListView(APIView):
 
     def get(self, request):
         mock_posts = [
-            {"id": 1, "title": "Первый пост", "content": "Текст поста 1"},
-            {"id": 2, "title": "Второй пост", "content": "Текст поста 2"}
+            {'id': 1, 'title': 'Первый пост', 'content': 'Текст поста 1'},
+            {'id': 2, 'title': 'Второй пост', 'content': 'Текст поста 2'}
         ]
         return Response(mock_posts, status=status.HTTP_200_OK)
 
@@ -26,6 +26,6 @@ class CommentsCreateView(APIView):
 
     def post(self, request):
         return Response(
-            {"message": "Комментарий создан"},
+            {'message': 'Комментарий создан'},
             status=status.HTTP_201_CREATED
         )

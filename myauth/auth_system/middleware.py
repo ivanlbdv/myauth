@@ -13,7 +13,7 @@ class CustomAuthMiddleware:
         request.user = None
 
         if auth_header and auth_header.startswith('Bearer '):
-            token = auth_header[7:]  # Убираем 'Bearer '
+            token = auth_header[7:]
             try:
                 payload = jwt.decode(
                     token,

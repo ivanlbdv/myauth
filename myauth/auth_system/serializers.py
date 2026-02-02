@@ -9,7 +9,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if data['password'] != data['password_confirm']:
-            raise serializers.ValidationError("Пароли не совпадают.")
+            raise serializers.ValidationError('Пароли не совпадают.')
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError('Email уже зарегистрирован.')
         return data
 
     def create(self, validated_data):
