@@ -1,5 +1,6 @@
 import jwt
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 
 from .models import User
 
@@ -9,9 +10,12 @@ class CustomAuthMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        auth_header = request.headers.get('Authorization')
-        request.user = None
+        current_user = getattr(request, 'user', None)
 
+        if current_user and current_user.is_authenticated:
+            return self.get_response(request)
+
+        auth_header = request.headers.get('Authorization')
         if auth_header and auth_header.startswith('Bearer '):
             token = auth_header[7:]
             try:
@@ -27,7 +31,9 @@ class CustomAuthMiddleware:
                 jwt.InvalidTokenError,
                 User.DoesNotExist
             ):
-                request.user = None
+                request.user = AnonymousUser()
+        else:
+            request.user = AnonymousUser()
 
         response = self.get_response(request)
         return response
