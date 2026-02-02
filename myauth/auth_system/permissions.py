@@ -9,11 +9,13 @@ class IsAuthenticated(permissions.BasePermission):
 
 
 class HasPermission(permissions.BasePermission):
-    def __init__(self, resource_code, permission_code):
-        self.resource_code = resource_code
-        self.permission_code = permission_code
-
     def has_permission(self, request, view):
+        resource_code = view.kwargs.get('resource_code') or request.query_params.get('resource')
+        permission_code = view.kwargs.get('permission_code') or request.query_params.get('permission')
+
+        if not resource_code or not permission_code:
+            return False
+
         if not hasattr(request, 'user') or request.user is None:
             return False
 
@@ -24,8 +26,8 @@ class HasPermission(permissions.BasePermission):
             return False
 
         try:
-            resource = Resource.objects.get(name=self.resource_code)
-            permission = Permission.objects.get(code=self.permission_code)
+            resource = Resource.objects.get(name=resource_code)
+            permission = Permission.objects.get(code=permission_code)
         except (Resource.DoesNotExist, Permission.DoesNotExist):
             return False
 

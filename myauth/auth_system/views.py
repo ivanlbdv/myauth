@@ -90,17 +90,18 @@ class UserDeleteView(APIView):
 
 
 class RoleListCreateView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        HasPermission('roles', 'manage_roles')
-    ]
+    permission_classes = [IsAuthenticated, HasPermission]
 
     def get(self, request):
+        self.kwargs['resource_code'] = 'roles'
+        self.kwargs['permission_code'] = 'manage_roles'
         roles = Role.objects.all()
         serializer = RoleSerializer(roles, many=True)
         return Response(serializer.data)
 
     def post(self, request):
+        self.kwargs['resource_code'] = 'roles'
+        self.kwargs['permission_code'] = 'manage_roles'
         serializer = RoleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -109,12 +110,11 @@ class RoleListCreateView(APIView):
 
 
 class RoleDetailView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        HasPermission('roles', 'manage_roles')
-    ]
+    permission_classes = [IsAuthenticated, HasPermission]
 
     def get(self, request, role_id):
+        self.kwargs['resource_code'] = 'roles'
+        self.kwargs['permission_code'] = 'manage_roles'
         try:
             role = Role.objects.get(id=role_id)
             serializer = RoleSerializer(role)
@@ -126,6 +126,8 @@ class RoleDetailView(APIView):
             )
 
     def put(self, request, role_id):
+        self.kwargs['resource_code'] = 'roles'
+        self.kwargs['permission_code'] = 'manage_roles'
         try:
             role = Role.objects.get(id=role_id)
         except Role.DoesNotExist:
@@ -141,6 +143,8 @@ class RoleDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, role_id):
+        self.kwargs['resource_code'] = 'roles'
+        self.kwargs['permission_code'] = 'manage_roles'
         try:
             role = Role.objects.get(id=role_id)
             role.delete()
@@ -156,24 +160,22 @@ class RoleDetailView(APIView):
 
 
 class PermissionListView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        HasPermission('permissions', 'view_permissions')
-    ]
+    permission_classes = [IsAuthenticated, HasPermission]
 
     def get(self, request):
+        self.kwargs['resource_code'] = 'permissions'
+        self.kwargs['permission_code'] = 'view_permissions'
         permissions = Permission.objects.all()
         serializer = PermissionSerializer(permissions, many=True)
         return Response(serializer.data)
 
 
 class AccessRuleCreateView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        HasPermission('access_rules', 'manage_rules')
-    ]
+    permission_classes = [IsAuthenticated, HasPermission]
 
     def post(self, request):
+        self.kwargs['resource_code'] = 'access_rules'
+        self.kwargs['permission_code'] = 'manage_rules'
         serializer = AccessRuleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -182,12 +184,11 @@ class AccessRuleCreateView(APIView):
 
 
 class AccessRuleDetailView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        HasPermission('access_rules', 'manage_rules')
-    ]
+    permission_classes = [IsAuthenticated, HasPermission]
 
     def get(self, request, rule_id):
+        self.kwargs['resource_code'] = 'access_rules'
+        self.kwargs['permission_code'] = 'manage_rules'
         try:
             rule = AccessRule.objects.get(id=rule_id)
             serializer = AccessRuleSerializer(rule)
@@ -199,6 +200,8 @@ class AccessRuleDetailView(APIView):
             )
 
     def put(self, request, rule_id):
+        self.kwargs['resource_code'] = 'access_rules'
+        self.kwargs['permission_code'] = 'manage_rules'
         try:
             rule = AccessRule.objects.get(id=rule_id)
         except AccessRule.DoesNotExist:
@@ -218,6 +221,8 @@ class AccessRuleDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, rule_id):
+        self.kwargs['resource_code'] = 'access_rules'
+        self.kwargs['permission_code'] = 'manage_rules'
         try:
             rule = AccessRule.objects.get(id=rule_id)
             rule.delete()

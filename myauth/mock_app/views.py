@@ -5,12 +5,11 @@ from rest_framework.views import APIView
 
 
 class PostsListView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        HasPermission('posts', 'view_posts')
-    ]
+    permission_classes = [IsAuthenticated, HasPermission]
 
     def get(self, request):
+        self.kwargs['resource_code'] = 'posts'
+        self.kwargs['permission_code'] = 'view_posts'
         mock_posts = [
             {'id': 1, 'title': 'Первый пост', 'content': 'Текст поста 1'},
             {'id': 2, 'title': 'Второй пост', 'content': 'Текст поста 2'}
@@ -19,12 +18,11 @@ class PostsListView(APIView):
 
 
 class CommentsCreateView(APIView):
-    permission_classes = [
-        IsAuthenticated,
-        HasPermission('comments', 'create_comments')
-    ]
+    permission_classes = [IsAuthenticated, HasPermission]
 
     def post(self, request):
+        self.kwargs['resource_code'] = 'comments'
+        self.kwargs['permission_code'] = 'create_comments'
         return Response(
             {'message': 'Комментарий создан'},
             status=status.HTTP_201_CREATED
