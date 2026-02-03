@@ -3,15 +3,14 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import AccessRule, Permission, Resource, Role, User
+from .models import AccessRule, Permission, Role, User
 from .permissions import HasPermission, IsAuthenticated
 from .serializers import (AccessRuleSerializer, PermissionSerializer,
-                          ResourceSerializer, RoleSerializer, UserSerializer)
+                          RoleSerializer, UserSerializer)
 
 
 class RegisterView(APIView):
     def post(self, request):
-        print("Received data:", request.data)
         serializer = UserSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

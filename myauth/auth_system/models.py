@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import bcrypt
 import jwt
@@ -85,7 +85,9 @@ class User(models.Model):
     def generate_jwt(self):
         payload = {
             'user_id': self.id,
-            'exp': datetime.now(timezone.utc) + timedelta(hours=24)
+            'email': self.email,
+            'exp': timezone.now() + timedelta(hours=24),
+            'iat': timezone.now(),
         }
         return jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
 
