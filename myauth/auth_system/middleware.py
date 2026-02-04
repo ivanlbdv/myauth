@@ -11,13 +11,17 @@ class CustomAuthMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        exempt_paths = [
-            '/api/auth/register/',
-            '/api/auth/login/',
-            '/api/auth/logout/',
-        ]
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Middleware triggered. Path: {request.path}, Method: {request.method}")
 
-        if request.path in exempt_paths:
+        exempt_paths = ['/api/auth/register/', '/api/auth/login/', '/api/auth/logout/']
+
+        for path in exempt_paths:
+                logger.info(f"Checking: request.path.startswith('{path}') → {request.path.startswith(path)}")
+
+        if any(request.path.startswith(path) for path in exempt_paths):
+            logger.info("Path exempted — skipping auth check")
             return self.get_response(request)
 
         current_user = getattr(request, 'user', None)

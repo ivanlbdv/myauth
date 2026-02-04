@@ -26,10 +26,12 @@ def create_initial_data():
         ('edit_posts', 'Редактирование постов'),
         ('delete_posts', 'Удаление постов'),
         ('view_users', 'Просмотр пользователей'),
+        ('delete_users', 'Деактивация пользователей'),
         ('edit_profile', 'Редактирование профиля'),
         ('manage_roles', 'Управление ролями'),
         ('manage_rules', 'Управление правилами доступа'),
         ('create_comments', 'Создание комментариев'),
+        ('view_roles', 'Просмотр ролей'),
     ]
 
     for code, desc in permissions_data:
@@ -53,7 +55,9 @@ def create_initial_data():
         ('posts', 'delete_posts'),
         ('users', 'view_users'),
         ('users', 'edit_profile'),
+        ('users', 'delete_users'),
         ('roles', 'manage_roles'),
+        ('roles', 'view_roles'),
         ('access_rules', 'manage_rules'),
         ('comments', 'create_comments'),
     ]
