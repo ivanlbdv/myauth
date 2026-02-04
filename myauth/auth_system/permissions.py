@@ -10,7 +10,7 @@ class IsAuthenticated(permissions.BasePermission):
 
 class HasPermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        if not hasattr(request, 'user') or not request.user.is_authenticated:
             return False
 
         resource_code = view.kwargs.get('resource_code') or request.query_params.get('resource')
@@ -19,7 +19,7 @@ class HasPermission(permissions.BasePermission):
         if not resource_code or not permission_code:
             return False
 
-        user_roles = UserRole.objects.filter(user=request.user)
+        user_roles = UserRole.objects.filter(user=request.user).prefetch_related('role')
         role_ids = [ur.role.id for ur in user_roles]
 
         if not role_ids:
@@ -31,7 +31,9 @@ class HasPermission(permissions.BasePermission):
         except (Resource.DoesNotExist, Permission.DoesNotExist):
             return False
 
-        rule_exists = AccessRule.objects.filter(
+        rule_exists = AccessRule.objects.select_related(
+            'role', 'resource', 'permission'
+        ).filter(
             role__id__in=role_ids,
             resource=resource,
             permission=permission,

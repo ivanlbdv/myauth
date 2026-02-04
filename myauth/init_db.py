@@ -59,14 +59,17 @@ def create_initial_data():
     ]
 
     for resource_name, perm_code in admin_rules:
-        resource = Resource.objects.get(name=resource_name)
-        permission = Permission.objects.get(code=perm_code)
-        AccessRule.objects.get_or_create(
-            role=admin_role,
-            resource=resource,
-            permission=permission,
-            is_allowed=True
-        )
+        try:
+            resource = Resource.objects.get(name=resource_name)
+            permission = Permission.objects.get(code=perm_code)
+            AccessRule.objects.get_or_create(
+                role=admin_role,
+                resource=resource,
+                permission=permission,
+                is_allowed=True
+            )
+        except (Resource.DoesNotExist, Permission.DoesNotExist) as e:
+            print(f'Ошибка при создании правила для админа: {e}')
 
     user_rules = [
         ('posts', 'view_posts'),
@@ -75,14 +78,17 @@ def create_initial_data():
     ]
 
     for resource_name, perm_code in user_rules:
-        resource = Resource.objects.get(name=resource_name)
-        permission = Permission.objects.get(code=perm_code)
-        AccessRule.objects.get_or_create(
-            role=user_role,
-            resource=resource,
-            permission=permission,
-            is_allowed=True
-        )
+        try:
+            resource = Resource.objects.get(name=resource_name)
+            permission = Permission.objects.get(code=perm_code)
+            AccessRule.objects.get_or_create(
+                role=user_role,
+                resource=resource,
+                permission=permission,
+                is_allowed=True
+            )
+        except (Resource.DoesNotExist, Permission.DoesNotExist) as e:
+            print(f'Ошибка при создании правила для пользователя: {e}')
 
     if not User.objects.filter(email='admin@example.com').exists():
         admin_user = User(
@@ -93,7 +99,10 @@ def create_initial_data():
         admin_user.set_password('adminpass123')
         admin_user.save()
 
-        UserRole.objects.create(user=admin_user, role=admin_role)
+        try:
+            UserRole.objects.create(user=admin_user, role=admin_role)
+        except Exception as e:
+            print(f'Ошибка при назначении роли админу: {e}')
 
     print('Инициализация завершена!')
 

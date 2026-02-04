@@ -1,4 +1,6 @@
+from django.contrib.auth import authenticate
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -7,6 +9,66 @@ from .models import AccessRule, Permission, Role, User
 from .permissions import HasPermission, IsAuthenticated
 from .serializers import (AccessRuleSerializer, PermissionSerializer,
                           RoleSerializer, UserSerializer)
+
+
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated, HasPermission]
+
+    def get_object(self, user_id):
+        return get_object_or_404(User, id=user_id)
+
+    def check_object_permissions(self, request, obj):
+        if request.method == 'PUT':
+            if request.user == obj:
+                return True
+            else:
+                return HasPermission().has_permission(
+                    request,
+                    self,
+                    resource_code='users',
+                    permission_code='edit_users'
+                )
+
+        elif request.method == 'DELETE':
+            return HasPermission().has_permission(
+                request,
+                self,
+                resource_code='users',
+                permission_code='delete_users'
+            )
+
+        return False
+
+    def put(self, request, user_id):
+        user = self.get_object(user_id)
+
+        if not self.check_object_permissions(request, user):
+            return Response(
+                {'error': 'У вас нет прав на редактирование этого пользователя'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, user_id):
+        user = self.get_object(user_id)
+
+        if not self.check_object_permissions(request, user):
+            return Response(
+                {'error': 'У вас нет прав на удаление этого пользователя'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user.is_active = False
+        user.save()
+        return Response(
+            {'message': 'Пользователь успешно деактивирован'},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
 
 class RegisterView(APIView):
@@ -26,17 +88,22 @@ class LoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
+        if not email or not password:
             return Response(
-                {'error': 'Пользователь не найден'},
+                {'error': 'Email и пароль обязательны'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = authenticate(email=email, password=password)
+        if not user:
+            return Response(
+                {'error': 'Неверные учетные данные'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        if not user.check_password(password) or not user.is_active:
+        if not user.is_active:
             return Response(
-                {'error': 'Неверный пароль или аккаунт неактивен'},
+                {'error': 'Аккаунт неактивен'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -76,6 +143,9 @@ class UserDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def delete(self, request, user_id):
+        if request.method != 'DELETE':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         try:
             user = User.objects.get(id=user_id)
         except User.DoesNotExist:

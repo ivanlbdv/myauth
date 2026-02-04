@@ -35,18 +35,11 @@ urlpatterns = [
         auth_views.LogoutView.as_view(),
         name='logout'
     ),
-
     path(
         'api/users/<int:user_id>/',
-        auth_views.UserUpdateView.as_view(),
-        name='user-update'
+        auth_views.UserDetailView.as_view(),
+        name='user-detail'
     ),
-    path(
-        'api/users/<int:user_id>/delete/',
-        auth_views.UserDeleteView.as_view(),
-        name='user-delete'
-    ),
-
     path(
         'api/roles/',
         auth_views.RoleListCreateView.as_view(),
@@ -58,11 +51,6 @@ urlpatterns = [
         name='role-detail'
     ),
     path(
-        'api/permissions/',
-        auth_views.PermissionListView.as_view(),
-        name='permission-list'
-    ),
-    path(
         'api/access-rules/',
         auth_views.AccessRuleCreateView.as_view(),
         name='access-rule-create'
@@ -72,15 +60,34 @@ urlpatterns = [
         auth_views.AccessRuleDetailView.as_view(),
         name='access-rule-detail'
     ),
-
     path(
         'api/posts/',
         mock_views.PostsListView.as_view(),
         name='posts-list'
     ),
     path(
+        'api/posts/<int:post_id>/',
+        mock_views.PostDetailView.as_view(),
+        name='post-detail'
+    ),
+    path(
         'api/comments/',
         mock_views.CommentsCreateView.as_view(),
         name='comments-create'
+    ),
+    path(
+        'api/comments/<int:comment_id>/',
+        mock_views.CommentDetailView.as_view(),
+        name='comment-detail'
+    ),
+    path(
+        'api/posts/<int:post_id>/comments/',
+        mock_views.CommentsByPostView.as_view(),
+        name='comments-by-post'
+    ),
+    path(
+        'api/permissions/',
+        auth_views.PermissionListView.as_view(),
+        name='permission-list'
     ),
 ]

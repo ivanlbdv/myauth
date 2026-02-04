@@ -1,12 +1,13 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from rest_framework import serializers
 
 from .models import AccessRule, Permission, Resource, Role, User, UserRole
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    password_confirm = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=False)
+    password_confirm = serializers.CharField(write_only=True, required=False)
 
     def validate(self, data):
         password = data.get('password')
@@ -28,6 +29,11 @@ class UserSerializer(serializers.ModelSerializer):
 
         email = data.get('email')
         if email:
+            try:
+                validate_email(email)
+            except ValidationError:
+                raise serializers.ValidationError({'email': 'Некорректный формат email.'})
+
             if not self.instance or self.instance.email != email:
                 if User.objects.filter(email=email).exists():
                     raise serializers.ValidationError({
@@ -69,10 +75,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id',
             'first_name',
             'last_name',
-            'patronymic',
             'email',
             'password',
             'password_confirm'
