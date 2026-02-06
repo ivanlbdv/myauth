@@ -32,7 +32,9 @@ class UserSerializer(serializers.ModelSerializer):
             try:
                 validate_email(email)
             except ValidationError:
-                raise serializers.ValidationError({'email': 'Некорректный формат email.'})
+                raise serializers.ValidationError(
+                    {'email': 'Некорректный формат email.'}
+                )
 
             if not self.instance or self.instance.email != email:
                 if User.objects.filter(email=email).exists():

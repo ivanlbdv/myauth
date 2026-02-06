@@ -1,4 +1,6 @@
 from django.contrib import admin
+from mock_app.models import Comment, Post
+
 from .models import AccessRule, Permission, Resource, Role, User, UserRole
 
 
@@ -90,3 +92,40 @@ class UserRoleAdmin(admin.ModelAdmin):
     )
     raw_id_fields = ('user', 'role')
     ordering = ('-id', 'user__email', 'role__name')
+
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'author', 'created_at')
+    list_filter = ('author', 'created_at')
+    search_fields = ('title',)
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at',)
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'content')
+        }),
+        ('Метаданные', {
+            'fields': ('author', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'post', 'author', 'created_at')
+    list_filter = ('post', 'author', 'created_at')
+    search_fields = ('content',)
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at',)
+
+    fieldsets = (
+        (None, {
+            'fields': ('post', 'content')
+        }),
+        ('Метаданные', {
+            'fields': ('author', 'created_at'),
+            'classes': ('collapse',)
+        }),
+    )

@@ -45,7 +45,7 @@ class HasPermission(permissions.BasePermission):
             return False
         except Permission.DoesNotExist:
             return False
-        except Exception as e:
+        except Exception:
             return False
 
         try:
@@ -55,8 +55,6 @@ class HasPermission(permissions.BasePermission):
                 permission=permission,
                 is_allowed=True
             ).exists()
-            print(f"[HasPermission] Access check result: {has_access}")
             return has_access
-        except Exception as e:
-            print(f"[HasPermission] Error checking access rules: {e}")
+        except Exception:
             return False

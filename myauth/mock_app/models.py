@@ -11,7 +11,10 @@ class Post(models.Model):
         related_name='posts',
         verbose_name='Автор'
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания'
+    )
 
     def __str__(self):
         return self.title
@@ -35,10 +38,13 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Автор комментария'
     )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата создания'
+    )
 
     def __str__(self):
-        return f'Комментарий к {self.post.title} от {self.author.username}'
+        return f'Комментарий к {self.post.title} от {self.author.email}'
 
     class Meta:
         verbose_name = 'Комментарий'

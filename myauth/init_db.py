@@ -32,7 +32,7 @@ def create_initial_data():
         ('manage_roles', 'Управление ролями'),
         ('manage_rules', 'Управление правилами доступа'),
         ('create_comments', 'Создание комментариев'),
-        ('views_comments', 'Просмотр комментариев'),
+        ('view_comments', 'Просмотр комментариев'),
         ('edit_comments', 'Редактирование комментариев'),
         ('delete_comments', 'Удаление комментариев'),
         ('view_roles', 'Просмотр ролей'),
@@ -50,12 +50,12 @@ def create_initial_data():
         Permission.objects.get_or_create(code=code, description=desc)
 
     resources_data = [
-        ('posts', 'Посты в блоге'),
         ('users', 'Пользователи системы'),
         ('roles', 'Роли'),
-        ('access_rules', 'Правила доступа'),
-        ('comments', 'Комментарии'),
         ('permissions', 'Разрешения'),
+        ('access_rules', 'Правила доступа'),
+        ('posts', 'Посты'),
+        ('comments', 'Комментарии'),
     ]
 
     for name, desc in resources_data:
@@ -102,15 +102,10 @@ def create_initial_data():
 
     user_rules = [
         ('posts', 'create_posts'),
-        ('posts', 'edit_posts'),
-        ('posts', 'delete_posts'),
         ('posts', 'view_posts'),
         ('users', 'edit_profile'),
-        ('users', 'edit_users'),
         ('comments', 'create_comments'),
         ('comments', 'view_comments'),
-        ('comments', 'edit_comments'),
-        ('comments', 'delete_comments'),
     ]
 
     for resource_name, perm_code in user_rules:

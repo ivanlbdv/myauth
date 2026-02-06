@@ -29,11 +29,18 @@ class PostsListView(APIView, PermissionContextMixin):
     def get(self, request, **kwargs):
         self.kwargs['resource_code'] = 'posts'
         self.kwargs['permission_code'] = 'view_posts'
-        mock_posts = [
-            {'id': 1, 'title': 'Первый пост', 'content': 'Текст поста 1'},
-            {'id': 2, 'title': 'Второй пост', 'content': 'Текст поста 2'}
-        ]
-        return Response(mock_posts, status=status.HTTP_200_OK)
+
+        try:
+            posts = Post.objects.all()
+        except Exception:
+            return Response(
+                {'error': 'Не удалось получить посты из базы'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        serializer = PostSerializer(posts, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         serializer = PostSerializer(
@@ -57,12 +64,34 @@ class CommentsCreateView(APIView, PermissionContextMixin):
         super().check_permissions(request)
 
     def post(self, request, **kwargs):
-        self.kwargs['resource_code'] = 'comments'
-        self.kwargs['permission_code'] = 'create_comments'
-        return Response(
-            {'message': 'Комментарий создан'},
-            status=status.HTTP_201_CREATED
-        )
+        if not request.user.is_authenticated:
+            return Response(
+                {'error': 'Требуется аутентификация'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        data = request.data.copy()
+
+        if 'post' not in data:
+            post_id = kwargs.get('post_id')
+            if not post_id:
+                return Response(
+                    {'post': ['Не указан ID поста']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            data['post'] = post_id
+
+        data['author'] = request.user.id
+
+        serializer = CommentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class PostDetailView(APIView, PermissionContextMixin):

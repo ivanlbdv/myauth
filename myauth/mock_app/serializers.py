@@ -35,7 +35,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author_info = UserSerializer(source='author', read_only=True)
     post_title = serializers.CharField(source='post.title', read_only=True)
 
     class Meta:
@@ -46,6 +46,8 @@ class CommentSerializer(serializers.ModelSerializer):
             'post_title',
             'content',
             'author',
+            'author_info',
             'created_at'
         ]
-        read_only_fields = ['created_at', 'post', 'author']
+
+        read_only_fields = ['created_at', 'post_title', 'author_info']
