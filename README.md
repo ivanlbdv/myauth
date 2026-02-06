@@ -135,3 +135,71 @@
 - **Прозрачность**: все правила доступа явно прописаны и видны в админ‑панели.
 
 ---
+
+## Локальный запуск проекта
+- Клонируйте репозиторий и перейдите в папку проекта:
+
+```bash
+git git@github.com:ivanlbdv/myauth.git
+cd myauth
+```
+- Создайте и активируйте виртуальное окружение:
+
+```bash
+python -m venv venv
+source venv/Scripts/activate
+```
+- Обновите пакетный менеджер:
+
+```bash
+python -m pip install --upgrade pip
+```
+- Установите модули из файла requirementst.txt:
+
+```bash
+pip install -r requirements.txt
+```
+
+- Создайте файл .env и добавьте в него:
+
+```   
+SECRET_KEY=your_secret_key
+DEBUG=True
+DB_NAME=auth_db
+DB_USER=your_user
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+- Выполните миграции:
+
+```bash
+python manage.py migrate
+```
+
+- Создайте суперпользователя:
+
+```bash
+python manage.py createsuperuser
+```
+
+Следуйте инструкциям в терминале для ввода email и пароля.
+
+Заполните базу тестовыми данными:
+
+```bash
+python init_db.py
+```
+
+- Запустите сервер разработки:
+
+```bash
+python manage.py runserver
+```
+
+Проект будет доступен по адресу: http://127.0.0.1:8000/
+
+## Автор:
+Иван Лебедев
+https://github.com/ivanlbdv
