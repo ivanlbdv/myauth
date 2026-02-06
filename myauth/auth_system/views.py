@@ -18,81 +18,78 @@ from .serializers import (AccessRuleSerializer, PermissionSerializer,
 logger = logging.getLogger(__name__)
 
 
-class UserDetailView(APIView):
-    permission_classes = [IsAuthenticated]
+class UserDetailView(APIView, PermissionContextMixin):
+    permission_classes = [IsAuthenticated, HasPermission]
+    resource_code = None
+    permission_code = None
+
+    http_method_names = ['get', 'put', 'delete', 'head', 'options', 'trace']
 
     def get_object(self, user_id):
         return get_object_or_404(User, id=user_id)
+
+    def check_permissions(self, request):
+        if request.method == 'GET':
+            self.resource_code = 'users'
+            self.permission_code = 'view_users'
+        elif request.method == 'PUT':
+            self.resource_code = 'users'
+            self.permission_code = 'edit_users'
+        elif request.method == 'DELETE':
+            self.resource_code = 'users'
+            self.permission_code = 'delete_users'
+
+        self.kwargs['resource_code'] = self.resource_code
+        self.kwargs['permission_code'] = self.permission_code
+
+        super().check_permissions(request)
 
     def check_object_permissions(self, request, obj):
         if request.method == 'GET':
             if request.user == obj:
                 return True
-            return HasPermission().has_permission(
-                request,
-                self,
-                resource_code='users',
-                permission_code='view_users'
-            )
-        elif request.method == 'PUT':
+            return True
+
+        if request.method == 'PUT':
             if request.user == obj:
                 return True
-            return HasPermission().has_permission(
-                request,
-                self,
-                resource_code='users',
-                permission_code='edit_users'
-            )
-        elif request.method == 'DELETE':
-            return HasPermission().has_permission(
-                request,
-                self,
-                resource_code='users',
-                permission_code='delete_users'
-            )
-        return False
+            return True
 
-    def get(self, request, user_id):
+        if request.method == 'DELETE':
+            return True
+
+        return super().check_object_permissions(request, obj)
+
+    def get(self, request, user_id, **kwargs):
         user = self.get_object(user_id)
-
-        if not self.check_object_permissions(request, user):
-            return Response(
-                {'error': 'У вас нет прав на просмотр этого пользователя'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         serializer = UserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=200)
 
-    def put(self, request, user_id):
+    def put(self, request, user_id, **kwargs):
         user = self.get_object(user_id)
-
         if not self.check_object_permissions(request, user):
             return Response(
                 {'error': 'У вас нет прав на редактирование этого пользователя'},
-                status=status.HTTP_403_FORBIDDEN
+                status=403
             )
-
         serializer = UserSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
 
-    def delete(self, request, user_id):
+    def delete(self, request, user_id, **kwargs):
         user = self.get_object(user_id)
-
         if not self.check_object_permissions(request, user):
             return Response(
                 {'error': 'У вас нет прав на удаление этого пользователя'},
-                status=status.HTTP_403_FORBIDDEN
+                status=403
             )
-
         user.is_active = False
         user.save()
         return Response(
             {'message': 'Пользователь успешно деактивирован'},
-            status=status.HTTP_204_NO_CONTENT
+            status=204
         )
 
 
@@ -116,44 +113,44 @@ class LoginView(APIView):
     authentication_classes = []
 
     def post(self, request):
-        logger.info("LoginView: POST request received")
-        logger.info(f"Request data: {request.data}")
+        logger.info('LoginView: POST request received')
+        logger.info(f'Request data: {request.data}')
 
         email = request.data.get('email')
         password = request.data.get('password')
 
         if not email or not password:
-            logger.warning("Missing email or password")
+            logger.warning('Missing email or password')
             return Response(
-                {"error": "Email and password are required"},
+                {'error': 'Требуется указать адрес электронной почты и пароль'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         user = authenticate(request, email=email, password=password)
         if user is None:
-            logger.warning(f"Authentication failed for email: {email}")
+            logger.warning(f'Authentication failed for email: {email}')
             return Response(
-                {"error": "Invalid credentials"},
+                {'error': 'Неверные учетные данные'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
         if not user.is_active:
-            logger.warning(f"User {email} is inactive")
+            logger.warning(f'User {email} is inactive')
             return Response(
-                {"error": "User is inactive"},
+                {'error': 'Пользователь неактивен'},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        logger.info(f"User {email} authenticated successfully")
+        logger.info(f'User {email} authenticated successfully')
 
         try:
             token = AccessToken.for_user(user)
-            logger.info("JWT token generated successfully")
-            return Response({"token": str(token)}, status=status.HTTP_200_OK)
+            logger.info('JWT token generated successfully')
+            return Response({'token': str(token)}, status=status.HTTP_200_OK)
         except Exception as e:
-            logger.error(f"Failed to generate JWT: {e}")
+            logger.error(f'Failed to generate JWT: {e}')
             return Response(
-                {"error": "Internal server error: failed to generate token"},
+                {'error': 'Внутренняя ошибка сервера: не удалось сгенерировать токен'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -167,7 +164,7 @@ class LogoutView(APIView):
 
         if not auth_header:
             return Response(
-                {"error": "Authorization header отсутствует"},
+                {'error': 'Заголовок Authorization отсутствует'},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
@@ -176,8 +173,8 @@ class LogoutView(APIView):
         if len(parts) < 2:
             return Response(
                 {
-                    "detail": "В заголовке Authorization не хватает токена. Формат: 'Bearer <токен>'",
-                    "code": "missing_token"
+                    'detail': 'В заголовке Authorization не хватает токена. Формат: "Bearer <токен>"',
+                    'code': 'missing_token'
                 },
                 status=status.HTTP_401_UNAUTHORIZED
             )
@@ -185,8 +182,8 @@ class LogoutView(APIView):
         if parts[0] != 'Bearer':
             return Response(
                 {
-                    "detail": "Первый элемент заголовка должен быть 'Bearer'",
-                    "code": "invalid_scheme"
+                    'detail': 'Первый элемент заголовка должен быть "Bearer"',
+                    'code': 'invalid_scheme'
                 },
                 status=status.HTTP_401_UNAUTHORIZED
             )
@@ -195,14 +192,17 @@ class LogoutView(APIView):
         if not token:
             return Response(
                 {
-                    "detail": "Токен не может быть пустым",
-                    "code": "empty_token"
+                    'detail': 'Токен не может быть пустым',
+                    'code': 'empty_token'
                 },
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-        logger.info("Logout successful")
-        return Response({"detail": "Logged out"}, status=status.HTTP_200_OK)
+        logger.info('Logout successful')
+        return Response(
+            {'detail': 'Пользователь успешно вышел из системы'},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserUpdateView(APIView):
@@ -245,22 +245,31 @@ class UserDeleteView(APIView):
 
 class RoleListCreateView(APIView, PermissionContextMixin):
     permission_classes = [IsAuthenticated, HasPermission]
-
     resource_code = 'roles'
-    permission_code = 'view_roles'
+    permission_code = None
 
-    def get(self, request):
+    def check_permissions(self, request):
+        if request.method == 'GET':
+            self.permission_code = 'view_roles'
+        elif request.method == 'POST':
+            self.permission_code = 'create_roles'
+
+        self.kwargs['resource_code'] = self.resource_code
+        self.kwargs['permission_code'] = self.permission_code
+
+        super().check_permissions(request)
+
+    def get(self, request, **kwargs):
         roles = Role.objects.all()
         serializer = RoleSerializer(roles, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=200)
 
-    def post(self, request):
-        self.permission_code = 'manage_roles'
+    def post(self, request, **kwargs):
         serializer = RoleSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
 
 
 class RoleDetailView(APIView, PermissionContextMixin):
@@ -268,41 +277,76 @@ class RoleDetailView(APIView, PermissionContextMixin):
     resource_code = 'roles'
     permission_code = None
 
-    def get(self, request, role_id):
-        self.permission_code = 'view_roles'  # Устанавливаем ДО логики
-        try:
-            role = Role.objects.get(id=role_id)
-            serializer = RoleSerializer(role)
-            return Response(serializer.data)
-        except Role.DoesNotExist:
-            return Response({'error': 'Роль не найдена'}, status=status.HTTP_404_NOT_FOUND)
+    def check_permissions(self, request):
+        if request.method == 'GET':
+            self.permission_code = 'view_roles'
+        elif request.method == 'PUT':
+            self.permission_code = 'edit_roles'
+        elif request.method == 'DELETE':
+            self.permission_code = 'delete_roles'
 
-    def put(self, request, role_id):
-        self.permission_code = 'manage_roles'
-        try:
-            role = Role.objects.get(id=role_id)
-        except Role.DoesNotExist:
-            return Response({'error': 'Роль не найдена'}, status=status.HTTP_404_NOT_FOUND)
+        self.kwargs['resource_code'] = self.resource_code
+        self.kwargs['permission_code'] = self.permission_code
+
+        super().check_permissions(request)
+
+    def check_object_permissions(self, request, obj):
+        return True
+
+    def get(self, request, role_id, **kwargs):
+        role = self.get_object(role_id)
+        if not self.check_object_permissions(request, role):
+            return Response(
+                {'error': 'У вас нет прав на просмотр этой роли'},
+                status=403
+            )
+        serializer = RoleSerializer(role)
+        return Response(serializer.data, status=200)
+
+    def put(self, request, role_id, **kwargs):
+        role = self.get_object(role_id)
+        if not self.check_object_permissions(request, role):
+            return Response(
+                {'error': 'У вас нет прав на редактирование этой роли'},
+                status=403
+            )
         serializer = RoleSerializer(role, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
 
-    def delete(self, request, role_id):
-        self.permission_code = 'manage_roles'
-        try:
-            role = Role.objects.get(id=role_id)
-            role.delete()
-            return Response({'message': 'Роль удалена'}, status=status.HTTP_204_NO_CONTENT)
-        except Role.DoesNotExist:
-            return Response({'error': 'Роль не найдена'}, status=status.HTTP_404_NOT_FOUND)
+    def delete(self, request, role_id, **kwargs):
+        role = self.get_object(role_id)
+        if not self.check_object_permissions(request, role):
+            return Response(
+                {'error': 'У вас нет прав на удаление этой роли'},
+                status=403
+            )
+        role.delete()
+        return Response({'message': 'Роль успешно удалена'}, status=204)
+
+    def get_object(self, role_id):
+        return get_object_or_404(Role, id=role_id)
 
 
-class PermissionListView(APIView):
+class PermissionListView(APIView, PermissionContextMixin):
     permission_classes = [IsAuthenticated, HasPermission]
+    resource_code = 'permissions'
+    permission_code = 'view_permissions'
 
-    def get(self, request):
+    def check_permissions(self, request):
+        if request.method == 'GET':
+            self.permission_code = 'view_permissions'
+        elif request.method == 'POST':
+            self.permission_code = 'create_permissions'
+
+        self.kwargs['resource_code'] = self.resource_code
+        self.kwargs['permission_code'] = self.permission_code
+
+        super().check_permissions(request)
+
+    def get(self, request, **kwargs):
         self.kwargs['resource_code'] = 'permissions'
         self.kwargs['permission_code'] = 'view_permissions'
         permissions = Permission.objects.all()
@@ -310,10 +354,23 @@ class PermissionListView(APIView):
         return Response(serializer.data)
 
 
-class AccessRuleCreateView(APIView):
+class AccessRuleCreateView(APIView, PermissionContextMixin):
     permission_classes = [IsAuthenticated, HasPermission]
+    resource_code = 'access_rules'
+    permission_code = 'create_access_rules'
 
-    def post(self, request):
+    def check_permissions(self, request):
+        if request.method == 'POST':
+            self.permission_code = 'create_access_rules'
+        elif request.method == 'GET':
+            self.permission_code = 'view_access_rules'
+
+        self.kwargs['resource_code'] = self.resource_code
+        self.kwargs['permission_code'] = self.permission_code
+
+        super().check_permissions(request)
+
+    def post(self, request, *args, **kwargs):
         self.kwargs['resource_code'] = 'access_rules'
         self.kwargs['permission_code'] = 'manage_rules'
         serializer = AccessRuleSerializer(data=request.data)
@@ -323,10 +380,25 @@ class AccessRuleCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class AccessRuleDetailView(APIView):
+class AccessRuleDetailView(APIView, PermissionContextMixin):
     permission_classes = [IsAuthenticated, HasPermission]
+    resource_code = 'access_rules'
+    permission_code = 'view_access_rules'
 
-    def get(self, request, rule_id):
+    def check_permissions(self, request):
+        if request.method == 'GET':
+            self.permission_code = 'view_access_rules'
+        elif request.method == 'PUT':
+            self.permission_code = 'edit_access_rules'
+        elif request.method == 'DELETE':
+            self.permission_code = 'delete_access_rules'
+
+        self.kwargs['resource_code'] = self.resource_code
+        self.kwargs['permission_code'] = self.permission_code
+
+        super().check_permissions(request)
+
+    def get(self, request, rule_id, **kwargs):
         self.kwargs['resource_code'] = 'access_rules'
         self.kwargs['permission_code'] = 'manage_rules'
         try:
@@ -339,7 +411,7 @@ class AccessRuleDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    def put(self, request, rule_id):
+    def put(self, request, rule_id, **kwargs):
         self.kwargs['resource_code'] = 'access_rules'
         self.kwargs['permission_code'] = 'manage_rules'
         try:
@@ -360,7 +432,7 @@ class AccessRuleDetailView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, rule_id):
+    def delete(self, request, rule_id, **kwargs):
         self.kwargs['resource_code'] = 'access_rules'
         self.kwargs['permission_code'] = 'manage_rules'
         try:

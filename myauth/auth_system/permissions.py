@@ -10,10 +10,17 @@ class IsAuthenticated(permissions.BasePermission):
 
 class HasPermission(permissions.BasePermission):
     def has_permission(self, request, view):
+        if (request.method == 'GET' and
+                'user_id' in view.kwargs and
+                request.user and
+                request.user.id == view.kwargs['user_id']):
+            return True
+
+        if not request.user or not request.user.is_authenticated:
+            return False
+
         resource_code = view.kwargs.get('resource_code')
         permission_code = view.kwargs.get('permission_code')
-
-        print(f"[HasPermission] resource_code={resource_code}, permission_code={permission_code}")
 
         if not resource_code or not permission_code:
             return False
@@ -21,19 +28,35 @@ class HasPermission(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
-        role_ids = UserRole.objects.filter(user=request.user).values_list('role__id', flat=True)
+        try:
+            role_ids = UserRole.objects.filter(
+                user=request.user
+            ).values_list('role__id', flat=True)
+        except Exception:
+            return False
+
         if not role_ids:
             return False
 
         try:
             resource = Resource.objects.get(name=resource_code)
             permission = Permission.objects.get(code=permission_code)
-        except (Resource.DoesNotExist, Permission.DoesNotExist):
+        except Resource.DoesNotExist:
+            return False
+        except Permission.DoesNotExist:
+            return False
+        except Exception as e:
             return False
 
-        return AccessRule.objects.filter(
-            role_id__in=role_ids,
-            resource=resource,
-            permission=permission,
-            is_allowed=True
-        ).exists()
+        try:
+            has_access = AccessRule.objects.filter(
+                role_id__in=role_ids,
+                resource=resource,
+                permission=permission,
+                is_allowed=True
+            ).exists()
+            print(f"[HasPermission] Access check result: {has_access}")
+            return has_access
+        except Exception as e:
+            print(f"[HasPermission] Error checking access rules: {e}")
+            return False

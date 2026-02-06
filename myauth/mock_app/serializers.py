@@ -7,12 +7,16 @@ from .models import Comment, Post
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email']
+        fields = ['id', 'first_name', 'last_name', 'email']
 
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     comments_count = serializers.SerializerMethodField()
+
+    def create(self, validated_data):
+        validated_data['author'] = self.context['request'].user
+        return super().create(validated_data)
 
     def get_comments_count(self, obj):
         return obj.comments.count()
