@@ -1,8 +1,9 @@
 import logging
 
 from django.contrib.auth import authenticate
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404
+from django.views import View
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -447,3 +448,16 @@ class AccessRuleDetailView(APIView, PermissionContextMixin):
                 {'error': 'Правило не найдено'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class PermissionsByResourceView(View):
+    def get(self, request):
+        resource_id = request.GET.get('resource_id')
+        print(f"Получен resource_id: {resource_id}")
+        if not resource_id:
+            return JsonResponse([], safe=False)
+
+        permissions = Permission.objects.filter(resource_id=resource_id).values(
+            'id', 'code', 'description'
+        )
+        return JsonResponse(list(permissions), safe=False)

@@ -37,16 +37,16 @@ class CustomUserManager(BaseUserManager):
 
 
 class User(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    patronymic = models.CharField(max_length=50, blank=True, null=True)
-    email = models.EmailField(unique=True)
-    password_hash = models.CharField(max_length=100)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_staff = models.BooleanField(default=False)
-    is_superuser = models.BooleanField(default=False)
+    first_name = models.CharField(max_length=50, verbose_name='Имя')
+    last_name = models.CharField(max_length=50, verbose_name='Фамилия')
+    patronymic = models.CharField(max_length=50, blank=True, null=True, verbose_name='Отчество')
+    email = models.EmailField(unique=True, verbose_name='Email')
+    password_hash = models.CharField(max_length=100, verbose_name='Хэш пароля')
+    is_active = models.BooleanField(default=True, verbose_name='Активный')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления')
+    is_staff = models.BooleanField(default=False, verbose_name='Персонал')
+    is_superuser = models.BooleanField(default=False, verbose_name='Суперпользователь')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -94,47 +94,69 @@ class User(models.Model):
     def __str__(self):
         return self.email
 
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
 
 class Role(models.Model):
-    name = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True, null=True)
+    name = models.CharField(max_length=50, unique=True, verbose_name='Имя')
+    description = models.TextField(blank=True, null=True, verbose_name='Описание')
 
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Роль'
+        verbose_name_plural = 'Роли'
 
-class Permission(models.Model):
-    code = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True, null=True)
+
+class Resource(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name='Имя')
+    description = models.TextField(blank=True, null=True, verbose_name='Описание')
 
     def __str__(self):
         return self.description
 
+    class Meta:
+        verbose_name = 'Ресурс'
+        verbose_name_plural = 'Ресурсы'
+
+
+class Permission(models.Model):
+    code = models.CharField(max_length=50, unique=True, verbose_name='Код')
+    description = models.TextField(blank=True, null=True, verbose_name='Описание')
+
+    def __str__(self):
+        return f'{self.description} ({self.code})'
+
+    class Meta:
+        verbose_name = 'Разрешение'
+        verbose_name_plural = 'Разрешения'
+
 
 class UserRole(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Пользователь')
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, verbose_name='Роль')
 
     def __str__(self):
         return f'{self.user.email} → {self.role.name}'
 
-
-class Resource(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.name
+    class Meta:
+        verbose_name = 'Пользовательская роль'
+        verbose_name_plural = 'Пользовательские роли'
 
 
 class AccessRule(models.Model):
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
-    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
-    permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
-    is_allowed = models.BooleanField(default=True)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, verbose_name='Роль')
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE, verbose_name='Ресурс')
+    permission = models.ForeignKey(Permission, on_delete=models.CASCADE, verbose_name='Разрешение')
+    is_allowed = models.BooleanField(default=True, verbose_name='Разрешено')
 
     def __str__(self):
         return f"{self.role.description} → {self.resource.description}: {self.permission.description} ({'разрешено' if self.is_allowed else 'запрещено'})"
 
     class Meta:
         unique_together = ('role', 'resource', 'permission')
+        verbose_name = 'Правило доступа'
+        verbose_name_plural = 'Правила доступа'

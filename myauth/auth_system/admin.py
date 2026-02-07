@@ -30,8 +30,12 @@ class AccessRuleAdmin(admin.ModelAdmin):
     list_display = ('id', 'role', 'resource', 'permission', 'is_allowed')
     list_filter = ('is_allowed', 'role', 'resource', 'permission')
     search_fields = ('role__name', 'resource__name', 'permission__code')
-    raw_id_fields = ('role', 'resource', 'permission')
+    autocomplete_fields = ['role', 'resource', 'permission']
     ordering = ('-id', 'role__name', 'resource__name')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('role', 'resource', 'permission')
 
 
 @admin.register(User)
@@ -85,13 +89,15 @@ class UserRoleAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'role')
     list_filter = ('role',)
     search_fields = (
-        'user__email',
-        'user__first_name',
-        'user__last_name',
+        'user__email', 'user__first_name', 'user__last_name',
         'role__name'
     )
-    raw_id_fields = ('user', 'role')
+    autocomplete_fields = ['user', 'role']
     ordering = ('-id', 'user__email', 'role__name')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related('user', 'role')
 
 
 @admin.register(Post)
