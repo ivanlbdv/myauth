@@ -18,7 +18,7 @@ class CustomAuthMiddleware:
         exempt_paths = ['/api/auth/register/', '/api/auth/login/', '/api/auth/logout/']
 
         for path in exempt_paths:
-                logger.info(f"Checking: request.path.startswith('{path}') → {request.path.startswith(path)}")
+            logger.info(f"Checking: request.path.startswith('{path}') → {request.path.startswith(path)}")
 
         if any(request.path.startswith(path) for path in exempt_paths):
             logger.info("Path exempted — skipping auth check")

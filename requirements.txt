@@ -1,6 +1,11 @@
-Django>=5.0
-djangorestframework>=3.14
-psycopg2-binary>=2.9
-pyjwt>=2.8
-bcrypt>=4.0
-python-decouple>=3.8
+asgiref==3.11.0
+bcrypt==5.0.0
+Django==5.2.10
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
+psycopg2-binary==2.9.11
+PyJWT==2.11.0
+python-decouple==3.8
+sqlparse==0.5.5
+typing_extensions==4.15.0
+tzdata==2025.3
