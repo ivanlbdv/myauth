@@ -1,13 +1,23 @@
 from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
+from django.core.validators import MinLengthValidator, validate_email
 from rest_framework import serializers
 
 from .models import AccessRule, Permission, Resource, Role, User, UserRole
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=False)
-    password_confirm = serializers.CharField(write_only=True, required=False)
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[MinLengthValidator(
+            8,
+            message='Пароль должен быть не менее 8 символов.'
+        )]
+    )
+    password_confirm = serializers.CharField(
+        write_only=True,
+        required=True
+    )
 
     def validate(self, data):
         password = data.get('password')
