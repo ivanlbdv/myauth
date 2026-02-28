@@ -214,6 +214,41 @@ python manage.py runserver
 
 Проект будет доступен по адресу: http://127.0.0.1:8000/
 
+##  Тестирование системы
+
+### Список тестов
+
+В проекте реализованы следующие тесты для проверки корректности работы системы аутентификации и авторизации:
+
+1. **`test_user_registration_assigns_user_role`** — проверка назначения роли `user` при регистрации нового пользователя.
+2. **`test_registration_with_existing_email_fails`** — проверка отказа в регистрации при использовании существующего email.
+3. **`test_user_login_success`** — проверка успешного логина и получения JWT‑токена.
+4. **`test_login_with_invalid_credentials_fails`** — проверка отказа при попытке логина с неверными учетными данными.
+5. **`test_login_with_inactive_user_fails`** — проверка отказа в доступе для неактивного пользователя.
+6. **`test_jwt_token_structure`** — проверка структуры и содержания JWT‑токена (наличие обязательных claims, срок действия и т. д.).
+7. **`test_logout_success`** — проверка корректного выполнения логаута и аннулирования доступа.
+8. **`test_input_validation_on_registration`** — проверка валидации входных данных при регистрации (некорректный email, короткий пароль и т. д.).
+
+### Инструкция по запуску тестов
+
+**Способ 1. Запуск всех тестов**
+
+```bash
+python manage.py test auth_system.tests
+```
+
+**Способ 2. Запуск отдельного теста**
+
+```bash
+python manage.py test auth_system.tests.TestUserRegistration.test_user_registration_assigns_user_role
+```
+
+**Способ 3. Запуск группы тестов (класса TestUserRegistration)**
+
+```bash
+python manage.py test auth_system.tests.TestUserRegistration
+```
+
 ## Автор:
 Иван Лебедев
 https://github.com/ivanlbdv
